@@ -157,3 +157,42 @@ out = wei @ v
 #out = wei @ x
 
 out.shape
+
+print(wei[0])
+
+k = torch.randn(B,T,head_size)
+q = torch.randn(B,T,head_size)
+wei = q @ k.transpose(-2, -1) * head_size**-0.5
+
+print(k.var())
+print(q.var())
+print(wei.var())
+print(torch.softmax(torch.tensor([0.1, -0.2, 0.3, -0.2, 0.5]), dim=-1))
+print(torch.softmax(torch.tensor([0.1, -0.2, 0.3, -0.2, 0.5])*8, dim=-1)) # gets too peaky, converges to one-hot
+
+class LayerNorm1d: # (used to be BatchNorm1d)
+
+  def __init__(self, dim, eps=1e-5, momentum=0.1):
+    self.eps = eps
+    self.gamma = torch.ones(dim)
+    self.beta = torch.zeros(dim)
+
+  def __call__(self, x):
+    # calculate the forward pass
+    xmean = x.mean(1, keepdim=True) # batch mean
+    xvar = x.var(1, keepdim=True) # batch variance
+    xhat = (x - xmean) / torch.sqrt(xvar + self.eps) # normalize to unit variance
+    self.out = self.gamma * xhat + self.beta
+    return self.out
+
+  def parameters(self):
+    return [self.gamma, self.beta]
+
+torch.manual_seed(1337)
+module = LayerNorm1d(100)
+x = torch.randn(32, 100) # batch size 32 of 100-dimensional vectors
+x = module(x)
+print(x.shape)
+
+print(x[:,0].mean(), x[:,0].std())
+print(x[0,:].mean(), x[0,:].std())
