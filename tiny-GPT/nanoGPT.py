@@ -167,7 +167,7 @@ wei = q @ k.transpose(-2, -1) * head_size**-0.5
 print(k.var())
 print(q.var())
 print(wei.var())
-print(torch.softmax(torch.tensor([0.1, -0.2, 0.3, -0.2, 0.5]), dim=-1))
+# print(torch.softmax(torch.tensor([0.1, -0.2, 0.3, -0.2, 0.5]), dim=-1))
 print(torch.softmax(torch.tensor([0.1, -0.2, 0.3, -0.2, 0.5])*8, dim=-1)) # gets too peaky, converges to one-hot
 
 class LayerNorm1d: # (used to be BatchNorm1d)
@@ -195,4 +195,3 @@ x = module(x)
 print(x.shape)
 
 print(x[:,0].mean(), x[:,0].std())
-print(x[0,:].mean(), x[0,:].std())
