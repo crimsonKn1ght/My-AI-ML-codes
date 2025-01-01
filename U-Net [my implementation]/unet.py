@@ -44,8 +44,8 @@ class Conv2D(nn.Module):
 
 # Define U-Net
 
-class unet(nn.Module):
-    def __init__(self, in_c, out_c):
+class unet_first(nn.Module):
+    def __init__(self):
         super().__init__()
 
         self.block1 = nn.Sequential(
@@ -93,7 +93,88 @@ class unet(nn.Module):
         x4p = nn.MaxPool2d(x4)
         
         x5 = self.block1(x4)
-        x5p = nn.MaxPool2d(x5)
 
-        return x5p, [x1, x2, x3, x4, x5]
+        return [x1, x2, x3, x4, x5]
+
+
+class unet_second(nn.Module):
+    def __init__(self):
+        super().__init__()
+
+        self.upconv1 = nn.ConvTranspose2d(
+            in_channels=1024,
+            out_channels=512,
+            kernel_size=2,
+            stride=2
+        )
+
+        self.upconv2 = nn.ConvTranspose2d(
+            in_channels=512,
+            out_channels=256,
+            kernel_size=2,
+            stride=2
+        )
+
+        self.upconv3 = nn.ConvTranspose2d(
+            in_channels=256,
+            out_channels=128,
+            kernel_size=2,
+            stride=2
+        )
+
+        self.upconv4 = nn.ConvTranspose2d(
+            in_channels=128,
+            out_channels=64,
+            kernel_size=2,
+            stride=2
+        )
+        
+        self.block1 = nn.Sequential(
+            Conv2D(in_c=1024, out_c=512, kernel_size=3),
+            Conv2D(in_c=512, out_c=512, kernel_size=3),
+            Conv2D(in_c=512, out_c=512, kernel_size=3),
+        )
+
+        self.block2 = nn.Sequential(
+            Conv2D(in_c=512, out_c=256, kernel_size=3),
+            Conv2D(in_c=256, out_c=256, kernel_size=3),
+            Conv2D(in_c=256, out_c=256, kernel_size=3),
+        )
+
+        self.block3 = nn.Sequential(
+            Conv2D(in_c=256, out_c=128, kernel_size=3),
+            Conv2D(in_c=128, out_c=128, kernel_size=3),
+            Conv2D(in_c=128, out_c=128, kernel_size=3),
+        )
+
+        self.block4 = nn.Sequential(
+            Conv2D(in_c=128, out_c=64, kernel_size=3),
+            Conv2D(in_c=64, out_c=64, kernel_size=3),
+            Conv2D(in_c=64, out_c=64, kernel_size=3),
+        )
+
+        self.lasthead = Conv2D(in_c=64, out_c=2, padding=1, stride=1)
+
+    def forward(self, x_set):
+        x1_1, x1_2, x1_3, x1_4, x1_5 = x_set
+        
+        x2_1 = self.upconv1(x1_5)
+        x2_1 = torch.cat([x2_1, x1_4], axis=1)
+        x2_1 = nn.block1(x2_1)
+        
+        x2_2 = self.upconv1(x1_4)
+        x2_2 = torch.cat([x2_2, x1_3], axis=1)
+        x2_2 = nn.block1(x2_2)
+
+        x2_3 = self.upconv1(x1_3)
+        x2_3 = torch.cat([x2_3, x1_2], axis=1)
+        x2_3 = nn.block1(x2_3)
+
+        x2_4 = self.upconv1(x1_2)
+        x2_4 = torch.cat([x2_4, x1_1], axis=1)
+        x2_4 = nn.block1(x2_4)
+
+        x = self.lasthead(x2_4)
+        
+        return x
         
