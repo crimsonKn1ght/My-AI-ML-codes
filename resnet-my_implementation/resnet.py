@@ -51,7 +51,7 @@ class Block(nn.Module):
 
 # Define resnet34
 class resnet34(nn.Module):
-    def __init__(self, ):
+    def __init__(self):
         super().__init__()
 
         self.initial = nn.Sequential(
@@ -64,18 +64,24 @@ class resnet34(nn.Module):
         self.layer_count = [3, 4, 6, 3]
         self.in_c = [64, 64, 128, 256]
         self.out_c = [64, 128, 256, 512]
+
+        self.layer = self._make_layers()
         
-    def forward(self, x):
-        block = [self.initial]
+    def _make_layers(self):
+        layers = []
         downsample = False
         
-        for i in len(self.layer_count):
+        for i in range(len(self.layer_count)):
             for j in range(self.layer_count[i]):
-                block.append(Block(self.in_c[i], self.out_c[i]), downsample=downsample)
+                layers.append(Block(self.in_c[i], self.out_c[i]), downsample=downsample)
                 downsample = False
 
             downsample = True
 
-        resnet34 = nn.Sequential(*block)
+        return nn.Sequential(*layers)
+        
+    def forward(self, x):
+        x = self.initial(x)
+        x = self.layer(x)
 
-        return resnet34
+        return x
