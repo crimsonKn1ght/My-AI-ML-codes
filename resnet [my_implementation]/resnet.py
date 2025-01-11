@@ -1,15 +1,8 @@
 # import libraries
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
+from collections import OrderedDict
 
-
-# Check for CUDA (GPU)
-device = torch.device('cuda')
-if device == 'cuda':
-    print(torch.cuda.get_device_name())
-else:
-    print('CUDA not available')
 
 # Define the Block
 class Block(nn.Module):
@@ -65,23 +58,28 @@ class resnet34(nn.Module):
         self.in_c = [64, 64, 128, 256]
         self.out_c = [64, 128, 256, 512]
 
-        self.layer = self._make_layers()
+        self.layer_1 = self._make_layers(0)
+        self.layer_2 = self._make_layers(1)
+        self.layer_3 = self._make_layers(2)
+        self.layer_4 = self._make_layers(3)
         
-    def _make_layers(self):
-        layers = []
+    def _make_layers(self, c):
+        layers = OrderedDict()
         downsample = False
         
-        for i in range(len(self.layer_count)):
-            for j in range(self.layer_count[i]):
-                layers.append(Block(self.in_c[i], self.out_c[i]), downsample=downsample)
-                downsample = False
+        for i in range(self.layer_count[c]):
+            layers[f'sub_layer_{i}'] = (Block(self.in_c[c], self.out_c[c], downsample=downsample))
+            downsample = False
 
-            downsample = True
+        downsample = True
 
-        return nn.Sequential(*layers)
+        return nn.Sequential(layers)
         
     def forward(self, x):
         x = self.initial(x)
-        x = self.layer(x)
+        x = self.layer1(x)
+        x = self.layer2(x)
+        x = self.layer3(x)
+        x = self.layer4(x)
 
         return x
